@@ -1,0 +1,50 @@
+input.onButtonPressed(Button.A, function () {
+    go = !(go)
+})
+radio.onReceivedValue(function (name, value) {
+    if (name == "speedt") {
+        speed = value
+    } else if (name == "tilt") {
+        tilt = value
+    } else if (name == "hit") {
+        DriveBit.stop(dbStopMode.Brake)
+        go = false
+        pins.servoWritePin(AnalogPin.P1, 10)
+        basic.pause(1000)
+        pins.servoWritePin(AnalogPin.P1, 170)
+        basic.pause(1000)
+        go = true
+    } else {
+        go = !(go)
+    }
+})
+let speed2 = 0
+let speed1 = 0
+let tilt = 0
+let speed = 0
+let go = false
+radio.setGroup(10)
+go = false
+speed = 0
+tilt = 0
+basic.forever(function () {
+    while (go) {
+        speed1 = speed + tilt
+        speed2 = speed - tilt
+        if (speed1 < 0) {
+            DriveBit.move(dbMotor.M1, dbDirection.Reverse, Math.abs(speed1))
+        } else {
+            DriveBit.move(dbMotor.M1, dbDirection.Forward, speed1)
+        }
+        if (speed2 < 0) {
+            DriveBit.move(dbMotor.M2, dbDirection.Reverse, Math.abs(speed2))
+        } else {
+            DriveBit.move(dbMotor.M2, dbDirection.Forward, speed2)
+        }
+        basic.pause(100)
+    }
+    DriveBit.stop(dbStopMode.Coast)
+})
+
+
+https://makecode.microbit.org/_RwFV5PKwj4ks

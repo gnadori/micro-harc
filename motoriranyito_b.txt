@@ -1,0 +1,22 @@
+let uzenet = 0
+let csoport = 3
+radio.setGroup(csoport)
+let go = true
+let speed1 = false
+let speed2 = false
+basic.forever(function () {
+    uzenet = Math.map(input.acceleration(Dimension.Y), -1023, 1023, 0, 99)
+    if (input.buttonIsPressed(Button.A)) {
+        uzenet = uzenet + 1000
+        led.plot(0, 0)
+    }
+    if (input.buttonIsPressed(Button.B)) {
+        uzenet = uzenet + 10000
+        led.plot(4, 0)
+    }
+    radio.sendNumber(uzenet)
+    basic.pause(100)
+    basic.clearScreen()
+})
+
+https://makecode.microbit.org/_MvE9vbWTYVFz

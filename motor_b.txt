@@ -1,0 +1,52 @@
+radio.onReceivedNumber(function (receivedNumber) {
+    speed = receivedNumber % 100
+    if (Math.trunc(receivedNumber / 1000) % 10 == 1) {
+        speed1 = true
+        led.plot(0, 0)
+    } else {
+        speed1 = false
+        led.unplot(0, 0)
+    }
+    if (Math.trunc(receivedNumber / 10000) == 1) {
+        speed2 = true
+        led.plot(4, 0)
+    } else {
+        speed2 = false
+        led.unplot(4, 0)
+    }
+})
+let speed = 0
+let speed2 = false
+let speed1 = false
+let csoport = 3
+radio.setGroup(csoport)
+let go = true
+speed1 = false
+speed2 = false
+basic.forever(function () {
+    while (go) {
+        if (speed1) {
+            if (speed > 50) {
+                DriveBit.move(dbMotor.M1, dbDirection.Forward, (speed - 50) * 2)
+            } else {
+                DriveBit.move(dbMotor.M1, dbDirection.Reverse, Math.abs((speed - 50) * 2))
+            }
+        } else {
+            DriveBit.move(dbMotor.M1, dbDirection.Forward, 0)
+        }
+        if (speed2) {
+            if (speed > 50) {
+                DriveBit.move(dbMotor.M2, dbDirection.Forward, (speed - 50) * 2)
+            } else {
+                DriveBit.move(dbMotor.M2, dbDirection.Reverse, Math.abs((speed - 50) * 2))
+            }
+        } else {
+            DriveBit.move(dbMotor.M2, dbDirection.Forward, 0)
+        }
+        basic.pause(100)
+    }
+    DriveBit.stop(dbStopMode.Coast)
+})
+
+
+https://makecode.microbit.org/_FLL5d2UsLPu2

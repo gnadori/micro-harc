@@ -1,0 +1,20 @@
+input.onButtonPressed(Button.A, function () {
+    radio.sendValue("hit", 1)
+    music.play(music.builtinPlayableSoundEffect(soundExpression.spring), music.PlaybackMode.UntilDone)
+})
+input.onButtonPressed(Button.B, function () {
+    radio.sendValue("stopgo", 1)
+    music.play(music.builtinPlayableSoundEffect(soundExpression.happy), music.PlaybackMode.UntilDone)
+})
+radio.setGroup(10)
+basic.forever(function () {
+    radio.sendValue("speedt", Math.map(input.acceleration(Dimension.Y), -1023, 1023, -30, 30))
+    basic.pause(10)
+    radio.sendValue("tilt", Math.map(input.acceleration(Dimension.X), -1023, 1023, -20, 20))
+    basic.showIcon(IconNames.No)
+    basic.pause(90)
+    basic.clearScreen()
+})
+
+
+https://makecode.microbit.org/_Kd4UAxRKp9bc
