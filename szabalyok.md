@@ -50,13 +50,13 @@ A lehető legjobb robotok vívjanak meg egymással egy arénában.
 
 3. **Rajtjelre** a robotok elindulhatnak az indítóterületről.
 
-4. **A mérkőzés hossza és menetek:**  
-   - Legfeljebb **3 percig** tart, vagy addig, amíg valamelyik robot **2 menetet megnyer**, illetve tartósan mozgásképtelenné válik.
-   - **Kiesés (kilökés):** Ha egy robot leesik a pálya nyitott oldalán (akár kilökték, akár magától hajtott le), az ellenfél nyeri az adott menetet, majd a robotok visszaállnak az indítóterületre.
+4. **A mérkőzés hossza:**  
+   - **3 percig** tart, vagy addig, amíg valamelyik robot **kiesik a pályáról**, illetve tartósan **mozgásképtelenné** válik.
+   - **Kiesés (kilökés):** Ha egy robot leesik a pálya nyitott oldalán (akár kilökték, akár magától hajtott le), az ellenfél **+10 pontot** kap, és a **mérkőzés azonnal véget ér**.
 
-5. **Pontozás:**  
-   - Ha a 3 perc végén egyik robot sem szerzett 2 nyert menetet és a menetek állása döntetlen (pl. 0–0 vagy 1–1), a bírók pontozása dönt.
-   - Ha a 3 perc végén valamelyik robot 1–0-ra vezet menetben, az a robot nyer.
+5. **Eredményhirdetés:**  
+   - A mérkőzés végén (3 perc lejárta vagy kilökés esetén) a **magasabb összpontszám** dönt — tehát ha egy robot korábban legalább 11 pont előnyt szerzett, akkor is ő nyer, ha végül kilökik!
+   - Pontegyenlőség esetén a bírók döntenek.
 
 ---
 
@@ -65,11 +65,14 @@ A lehető legjobb robotok vívjanak meg egymással egy arénában.
 - **Aktív ütközés:** 1 pont  
   *Egyértelműen az egyik robot ment neki a másiknak; egy akció = egy pont*
 
+- **Sérülés okozása:** 2 pont  
+  *Ha az egyik robot tevékenysége miatt a másik része leesik vagy jól láthatóan megrongálódik*
+
 - **Emelés:** 3 pont  
   *Ha az egyik robot legalább részben felemeli a másikat*
 
-- **Sérülés okozása:** 2 pont  
-  *Ha az egyik robot tevékenysége miatt a másik része leesik vagy jól láthatóan megrongálódik*
+- **Kilökés / kiesés a pályáról:** 10 pont  
+  *Ha a másik robot leesik a pálya nyitott oldalán (akár kilökés, akár saját hiba miatt); a 10 pont jóváírásával a mérkőzés véget ér, és az összpontszám dönt*
 
 ---
 

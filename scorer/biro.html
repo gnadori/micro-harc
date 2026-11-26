@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>micro:harc – Bírói vezérlőpult</title>
+  <style>
+    :root {
+      --bg: #16142a;
+      --panel: #221f3d;
+      --yellow: #FFD600;
+      --left: #FF5722;
+      --right: #00B8D4;
+      --ink: #111;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hazard-bar {
+      height: 12px;
+      background: repeating-linear-gradient(-45deg, #FFD600 0, #FFD600 16px, #111 16px, #111 32px);
+      border-bottom: 3px solid #111;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 20px;
+      background: #1d1a36;
+      border-bottom: 4px solid #111;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge {
+      background: var(--yellow);
+      color: #111;
+      font-weight: 900;
+      padding: 6px 14px;
+      border: 3px solid #111;
+      border-radius: 10px;
+      box-shadow: 3px 3px 0 #111;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+    }
+
+    .conn-pill {
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 2px solid #111;
+      background: #3a3566;
+    }
+    .conn-pill.ok { background: #2e7d32; }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button {
+      font-family: inherit;
+      font-weight: 900;
+      border: 3px solid #111;
+      border-radius: 12px;
+      box-shadow: 3px 3px 0 #111;
+      cursor: pointer;
+      transition: transform 0.08s, box-shadow 0.08s;
+      color: #111;
+      background: #fff;
+      padding: 8px 14px;
+      font-size: 0.95rem;
+    }
+    button:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 #111;
+    }
+    button.primary { background: var(--yellow); }
+    button.green { background: #76FF03; }
+    button.red { background: #FF5252; color: #fff; }
+    button.purple { background: #B388FF; }
+    button.dark { background: #342f5c; color: #fff; }
+    button.left-btn { background: #FF8A65; }
+    button.right-btn { background: #4DD0E1; }
+
+    /* Fő tartalom */
+    .container {
+      max-width: 1320px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    /* Felső sor: Óra + rajt + vicces effektek */
+    .top-bar {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 860px) {
+      .top-bar { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 4px solid #111;
+      border-radius: 18px;
+      box-shadow: 6px 6px 0 #111;
+      padding: 14px 16px;
+    }
+
+    .panel h2 {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--yellow);
+      margin-bottom: 10px;
+    }
+
+    .timer-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .clock-readout {
+      font-family: "Impact", "Arial Black", monospace;
+      font-size: 3rem;
+      background: #111;
+      color: #76FF03;
+      padding: 6px 18px;
+      border-radius: 14px;
+      border: 3px solid var(--yellow);
+      min-width: 150px;
+      text-align: center;
+      line-height: 1.1;
+    }
+    .clock-readout.paused { color: #FFD600; }
+    .clock-readout.danger { color: #FF1744; }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* Két versenyző panel */
+    .fighters-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 860px) {
+      .fighters-grid { grid-template-columns: 1fr; }
+    }
+
+    .fighter-panel {
+      border: 5px solid #111;
+      border-radius: 22px;
+      box-shadow: 7px 7px 0 #111;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .fighter-panel.left { background: linear-gradient(180deg, #562319 0%, #2c1722 100%); }
+    .fighter-panel.right { background: linear-gradient(180deg, #10424e 0%, #162438 100%); }
+
+    .fighter-header {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .mini-avatar {
+      width: 64px;
+      height: 60px;
+      flex-shrink: 0;
+    }
+    .name-inputs {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .name-row {
+      display: flex;
+      gap: 6px;
+    }
+    input[type="text"], select {
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 1rem;
+      padding: 7px 10px;
+      border: 3px solid #111;
+      border-radius: 10px;
+      background: #fff;
+      color: #111;
+      width: 100%;
+    }
+
+    /* Élő pont + menet sáv */
+    .scoreboard-mini {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0,0,0,0.35);
+      border: 3px solid #111;
+      border-radius: 14px;
+      padding: 10px 14px;
+    }
+    .mini-pts {
+      font-family: "Impact", "Arial Black", sans-serif;
+      font-size: 2.6rem;
+      line-height: 1;
+    }
+    .mini-rounds {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 900;
+    }
+    .mini-crown {
+      font-size: 1.5rem;
+      opacity: 0.25;
+      filter: grayscale(1);
+    }
+    .mini-crown.won {
+      opacity: 1;
+      filter: none;
+    }
+
+    /* Nagy pontozó gombok */
+    .score-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .big-score-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 14px 8px;
+      font-size: 1rem;
+      min-height: 92px;
+    }
+    .big-score-btn .emoji { font-size: 1.7rem; }
+    .big-score-btn .pts {
+      background: #111;
+      color: var(--yellow);
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+    }
+    .big-score-btn .kbd {
+      font-size: 0.72rem;
+      opacity: 0.7;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .action-row button { flex: 1; min-width: 130px; }
+
+    /* KO panel ha aktív */
+    .ko-banner {
+      display: none;
+      background: #FF1744;
+      border: 4px solid #111;
+      border-radius: 16px;
+      padding: 12px 16px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: 5px 5px 0 #111;
+    }
+    .ko-banner.show { display: flex; }
+
+    /* Alsó segédsáv */
+    .footer-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: #cfcbe8;
+    }
+    .kbd-chip {
+      display: inline-block;
+      background: #111;
+      color: var(--yellow);
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-weight: 900;
+      margin: 0 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="hazard-bar"></div>
+
+  <header>
+    <div class="title-group">
+      <div class="badge">⚖️ MICRO:HARC – BÍRÓ</div>
+      <div class="conn-pill" id="connPill">Kivetítő: nincs nyitva</div>
+    </div>
+
+    <div class="header-actions">
+      <button class="primary" id="openProjectorBtn">📺 Kivetítő ablak megnyitása</button>
+      <button class="dark" id="soundToggleBtn">🔊 Hang: BE</button>
+      <button class="dark" id="undoBtn">↩️ Visszavonás</button>
+      <button class="red" id="newMatchBtn">🔄 Új mérkőzés</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Aktív KO rászámolás figyelmeztető sáv -->
+    <div class="ko-banner" id="koControlBar">
+      <strong id="koControlText" style="font-size:1.15rem;">⏱️ RÁSZÁMOLÁS FOLYAMATBAN: 10</strong>
+      <div class="btn-group">
+        <button class="green" id="koCancelBtn">✅ Megmozdult! (Megszakítás)</button>
+        <button class="primary" id="koFinishNowBtn">💀 Azonnali K.O.</button>
+      </div>
+    </div>
+
+    <!-- Felső vezérlősor -->
+    <div class="top-bar">
+      <div class="panel">
+        <h2>⏱️ Mérkőzés óra (3 perc)</h2>
+        <div class="timer-row">
+          <div class="clock-readout paused" id="clockReadout">3:00</div>
+          <div class="btn-group">
+            <button class="primary" id="countdownStartBtn">🚦 3-2-1 HARC! (R)</button>
+            <button class="green" id="toggleTimerBtn">▶️ Indít (Space)</button>
+            <button class="dark" id="add10Btn">+10 mp</button>
+            <button class="dark" id="sub10Btn">-10 mp</button>
+            <button class="dark" id="resetTimerBtn">↺ 3:00</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>🎭 Aréna & Vicces effektek</h2>
+        <div class="btn-group" style="margin-bottom:8px;">
+          <input type="text" id="matchTitleInput" value="MICRO:HARC ARÉNA" style="max-width:280px;" placeholder="Verseny / forduló neve" />
+        </div>
+        <div class="btn-group">
+          <button class="purple" id="laserWarnBtn">🚫⚡ Halálsugár tilos!</button>
+          <button class="primary" id="decideWinnerBtn">🏆 Eredményhirdetés</button>
+          <button class="dark" id="clearWinnerBtn">✖️ Eredmény elrejtése</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bal és jobb versenyző -->
+    <div class="fighters-grid">
+      <!-- BAL ROBOT -->
+      <section class="fighter-panel left">
+        <div class="fighter-header">
+          <div class="mini-avatar" id="miniLeftAvatar"></div>
+          <div class="name-inputs">
+            <div class="name-row">
+              <input type="text" id="leftNameInput" value="9V-os Rémség" placeholder="Bal robot neve" />
+              <button class="primary" id="leftRandomBtn" title="Véletlen vicces név" style="width:auto;">🎲</button>
+            </div>
+            <select id="leftAvatarSelect"></select>
+          </div>
+        </div>
+
+        <div class="scoreboard-mini">
+          <div>
+            <div style="font-size:0.85rem; opacity:0.85;">💥 <span id="mLeftHit">0</span> &nbsp; 🔧 <span id="mLeftDmg">0</span> &nbsp; 🚀 <span id="mLeftLift">0</span> &nbsp; 🕳️ <span id="mLeftRing">0</span></div>
+            <div class="mini-pts" id="mLeftPts">0</div>
+          </div>
+          <button class="dark" id="leftMinusBtn" style="padding:6px 12px;">-1 pt</button>
+        </div>
+
+        <div class="score-buttons">
+          <button class="big-score-btn left-btn" data-side="left" data-action="hit">
+            <span class="emoji">💥</span>
+            <span>Ütközés</span>
+            <span class="pts">+1 pont</span>
+            <span class="kbd">[Q / A]</span>
+          </button>
+          <button class="big-score-btn left-btn" data-side="left" data-action="damage">
+            <span class="emoji">🔧</span>
+            <span>Sérülés</span>
+            <span class="pts">+2 pont</span>
+            <span class="kbd">[W]</span>
+          </button>
+          <button class="big-score-btn left-btn" data-side="left" data-action="lift">
+            <span class="emoji">🚀</span>
+            <span>Emelés</span>
+            <span class="pts">+3 pont</span>
+            <span class="kbd">[E]</span>
+          </button>
+        </div>
+
+        <div class="action-row">
+          <button class="primary" id="leftRingOutWinBtn">🕳️ Kilökés (+10 pont)</button>
+          <button class="red" id="leftKoBtn">😵 Rászámolás rá (10 mp)</button>
+        </div>
+      </section>
+
+      <!-- JOBB ROBOT -->
+      <section class="fighter-panel right">
+        <div class="fighter-header">
+          <div class="mini-avatar" id="miniRightAvatar"></div>
+          <div class="name-inputs">
+            <div class="name-row">
+              <input type="text" id="rightNameInput" value="Bádog Pista" placeholder="Jobb robot neve" />
+              <button class="primary" id="rightRandomBtn" title="Véletlen vicces név" style="width:auto;">🎲</button>
+            </div>
+            <select id="rightAvatarSelect"></select>
+          </div>
+        </div>
+
+        <div class="scoreboard-mini">
+          <div>
+            <div style="font-size:0.85rem; opacity:0.85;">💥 <span id="mRightHit">0</span> &nbsp; 🔧 <span id="mRightDmg">0</span> &nbsp; 🚀 <span id="mRightLift">0</span> &nbsp; 🕳️ <span id="mRightRing">0</span></div>
+            <div class="mini-pts" id="mRightPts">0</div>
+          </div>
+          <button class="dark" id="rightMinusBtn" style="padding:6px 12px;">-1 pt</button>
+        </div>
+
+        <div class="score-buttons">
+          <button class="big-score-btn right-btn" data-side="right" data-action="hit">
+            <span class="emoji">💥</span>
+            <span>Ütközés</span>
+            <span class="pts">+1 pont</span>
+            <span class="kbd">[I / L]</span>
+          </button>
+          <button class="big-score-btn right-btn" data-side="right" data-action="damage">
+            <span class="emoji">🔧</span>
+            <span>Sérülés</span>
+            <span class="pts">+2 pont</span>
+            <span class="kbd">[O]</span>
+          </button>
+          <button class="big-score-btn right-btn" data-side="right" data-action="lift">
+            <span class="emoji">🚀</span>
+            <span>Emelés</span>
+            <span class="pts">+3 pont</span>
+            <span class="kbd">[P]</span>
+          </button>
+        </div>
+
+        <div class="action-row">
+          <button class="primary" id="rightRingOutWinBtn">🕳️ Kilökés (+10 pont)</button>
+          <button class="red" id="rightKoBtn">😵 Rászámolás rá (10 mp)</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="panel footer-bar">
+      <div>
+        <strong>Gyorsbillentyűk:</strong>
+        <span class="kbd-chip">Space</span> Óra indít/szünet
+        <span class="kbd-chip">R</span> 3-2-1 HARC
+        | Bal: <span class="kbd-chip">Q</span>/<span class="kbd-chip">A</span>+1 <span class="kbd-chip">W</span>+2 <span class="kbd-chip">E</span>+3
+        | Jobb: <span class="kbd-chip">I</span>/<span class="kbd-chip">L</span>+1 <span class="kbd-chip">O</span>+2 <span class="kbd-chip">P</span>+3
+      </div>
+      <div>
+        💡 Tipp: Nyisd meg a <strong>Kivetítő ablakot</strong>, húzd át a projektorra, és nyomj rajta <strong>F11</strong>-et!
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    let state = createDefaultState();
+    let historyStack = [];
+    let projectorWin = null;
+    let bc = ("BroadcastChannel" in window) ? new BroadcastChannel(CHANNEL_NAME) : null;
+    let koInterval = null;
+    let startTimers = [];
+    let ringOutTimer = null;
+    let lastDangerBeepSec = null;
+
+    // Avatár választók feltöltése
+    function fillAvatarSelect(sel, current) {
+      sel.innerHTML = AVATARS.map(a => `<option value="${a.id}">${a.label} avatár</option>`).join("");
+      sel.value = current;
+    }
+
+    function pushUndo() {
+      historyStack.push(JSON.parse(JSON.stringify(state)));
+      if (historyStack.length > 30) historyStack.shift();
+    }
+
+    function broadcastState() {
+      state.updatedAt = Date.now();
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+
+      if (bc) {
+        try { bc.postMessage({ type: "MICROHARC_STATE", state }); } catch (e) {}
+      }
+      if (projectorWin && !projectorWin.closed) {
+        try { projectorWin.postMessage({ type: "MICROHARC_STATE", state }, "*"); } catch (e) {}
+      }
+      renderRefereeUI();
+    }
+
+    function renderRefereeUI() {
+      const conn = document.getElementById("connPill");
+      const open = projectorWin && !projectorWin.closed;
+      conn.textContent = open ? "Kivetítő: KAPCSOLÓDVA ✓" : "Kivetítő: nincs nyitva";
+      conn.classList.toggle("ok", !!open);
+
+      document.getElementById("soundToggleBtn").textContent = state.soundEnabled ? "🔊 Hang: BE" : "🔇 Hang: KI";
+
+      // Bal
+      document.getElementById("mLeftPts").textContent = state.left.points;
+      document.getElementById("mLeftHit").textContent = state.left.stats.hit;
+      document.getElementById("mLeftDmg").textContent = state.left.stats.damage;
+      document.getElementById("mLeftLift").textContent = state.left.stats.lift;
+      document.getElementById("mLeftRing").textContent = state.left.stats.ringout || 0;
+      document.getElementById("miniLeftAvatar").innerHTML = renderRobotSVG(state.left.avatar, "left", "idle");
+
+      // Jobb
+      document.getElementById("mRightPts").textContent = state.right.points;
+      document.getElementById("mRightHit").textContent = state.right.stats.hit;
+      document.getElementById("mRightDmg").textContent = state.right.stats.damage;
+      document.getElementById("mRightLift").textContent = state.right.stats.lift;
+      document.getElementById("mRightRing").textContent = state.right.stats.ringout || 0;
+      document.getElementById("miniRightAvatar").innerHTML = renderRobotSVG(state.right.avatar, "right", "idle");
+
+      // KO sáv
+      const koBar = document.getElementById("koControlBar");
+      if (state.koCount && state.koCount.active) {
+        const nm = state.koCount.side === "left" ? state.left.name : state.right.name;
+        document.getElementById("koControlText").textContent = `⏱️ RÁSZÁMOLÁS (${nm}): ${state.koCount.sec} mp`;
+        koBar.classList.add("show");
+      } else {
+        koBar.classList.remove("show");
+      }
+
+      document.getElementById("toggleTimerBtn").textContent = state.timerRunning ? "⏸️ Szünet (Space)" : "▶️ Indít (Space)";
+      updateClock();
+    }
+
+    function updateClock() {
+      const ms = getEffectiveTimeLeftMs(state);
+      const secLeft = Math.ceil(ms / 1000);
+      const el = document.getElementById("clockReadout");
+      el.textContent = formatTime(ms);
+      el.classList.toggle("paused", !state.timerRunning && ms > 0);
+      const isDanger = state.timerRunning && secLeft <= 10 && secLeft > 0;
+      el.classList.toggle("danger", isDanger);
+
+      if (isDanger && lastDangerBeepSec !== secLeft) {
+        lastDangerBeepSec = secLeft;
+        SoundFX.play("beep", state.soundEnabled);
+      }
+      if (!isDanger) lastDangerBeepSec = null;
+
+      // Ha lejárt a 3:00!
+      if (state.timerRunning && ms === 0) {
+        state.timerRunning = false;
+        state.timeLeftMs = 0;
+        state.timerAnchor = null;
+        SoundFX.play("buzzer", state.soundEnabled);
+        decideWinnerAuto("LEJÁRT A 3 PERC!");
+      }
+    }
+
+    setInterval(updateClock, 150);
+
+    // Kivetítő ablak nyitása
+    document.getElementById("openProjectorBtn").addEventListener("click", () => {
+      if (projectorWin && !projectorWin.closed) {
+        projectorWin.focus();
+        broadcastState();
+        return;
+      }
+      projectorWin = window.open("kivetito.html", "microharc_kivetito", "width=1280,height=760");
+      setTimeout(broadcastState, 450);
+      setTimeout(broadcastState, 1200);
+    });
+
+    // Kivetítő üdvözlő üzenete -> küldjük az aktuális állapotot
+    window.addEventListener("message", (ev) => {
+      if (ev.data && ev.data.type === "MICROHARC_HELLO") {
+        broadcastState();
+      }
+    });
+    if (bc) {
+      bc.onmessage = (ev) => {
+        if (ev.data && ev.data.type === "MICROHARC_HELLO") {
+          broadcastState();
+        }
+      };
+    }
+
+    // Óra vezérlés
+    function startTimer() {
+      if (state.timerRunning) return;
+      if (state.timeLeftMs <= 0) state.timeLeftMs = 180000;
+      state.timerRunning = true;
+      state.timerAnchor = Date.now();
+      state.timerAnchorLeftMs = state.timeLeftMs;
+      state.winner = null;
+      broadcastState();
+    }
+
+    function pauseTimer() {
+      if (!state.timerRunning) return;
+      state.timeLeftMs = getEffectiveTimeLeftMs(state);
+      state.timerRunning = false;
+      state.timerAnchor = null;
+      broadcastState();
+    }
+
+    function toggleTimer() {
+      if (state.timerRunning) pauseTimer();
+      else startTimer();
+    }
+
+    document.getElementById("toggleTimerBtn").addEventListener("click", toggleTimer);
+
+    document.getElementById("add10Btn").addEventListener("click", () => {
+      const cur = getEffectiveTimeLeftMs(state);
+      state.timeLeftMs = cur + 10000;
+      if (state.timerRunning) {
+        state.timerAnchor = Date.now();
+        state.timerAnchorLeftMs = state.timeLeftMs;
+      }
+      broadcastState();
+    });
+
+    document.getElementById("sub10Btn").addEventListener("click", () => {
+      const cur = getEffectiveTimeLeftMs(state);
+      state.timeLeftMs = Math.max(0, cur - 10000);
+      if (state.timerRunning) {
+        state.timerAnchor = Date.now();
+        state.timerAnchorLeftMs = state.timeLeftMs;
+      }
+      broadcastState();
+    });
+
+    document.getElementById("resetTimerBtn").addEventListener("click", () => {
+      state.timerRunning = false;
+      state.timerAnchor = null;
+      state.timeLeftMs = 180000;
+      state.timerAnchorLeftMs = 180000;
+      broadcastState();
+    });
+
+    // 3-2-1-HARC rajtvisszaszámláló
+    function triggerStartCountdown() {
+      startTimers.forEach(t => clearTimeout(t));
+      startTimers = [];
+      pauseTimer();
+      state.winner = null;
+      const steps = ["3", "2", "1", "HARC!"];
+      steps.forEach((step, idx) => {
+        const t = setTimeout(() => {
+          state.startCountdown = { step, id: Date.now() + "_" + idx };
+          if (step === "HARC!") {
+            startTimer();
+          } else {
+            broadcastState();
+          }
+          SoundFX.play(step === "HARC!" ? "gong" : "beep", state.soundEnabled);
+        }, idx * 850);
+        startTimers.push(t);
+      });
+      startTimers.push(setTimeout(() => {
+        state.startCountdown = null;
+        broadcastState();
+      }, steps.length * 850 + 500));
+    }
+    document.getElementById("countdownStartBtn").addEventListener("click", triggerStartCountdown);
+
+    // Pontadás (+1 / +2 / +3)
+    function awardPoints(side, action) {
+      pushUndo();
+      const ptsMap = { hit: 1, damage: 2, lift: 3 };
+      const pts = ptsMap[action];
+      const other = side === "left" ? "right" : "left";
+
+      state[side].points += pts;
+      state[side].stats[action] += 1;
+      state[side].mood = "happy";
+      state[side].moodUntil = Date.now() + 1800;
+
+      state[other].mood = "hurt";
+      state[other].moodUntil = Date.now() + 1800;
+
+      state.lastBanner = {
+        id: Date.now() + "_" + Math.random(),
+        text: pickRandom(EVENT_SLOGANS[action]),
+        subtext: `${state[side].name} (+${pts} pont)`,
+        side,
+        type: action,
+        ts: Date.now()
+      };
+
+      SoundFX.play(action, state.soundEnabled);
+      broadcastState();
+    }
+
+    document.querySelectorAll(".big-score-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        awardPoints(btn.dataset.side, btn.dataset.action);
+      });
+    });
+
+    // -1 pont javítás
+    function subtractPoint(side) {
+      pushUndo();
+      state[side].points = Math.max(0, state[side].points - 1);
+      broadcastState();
+    }
+    document.getElementById("leftMinusBtn").addEventListener("click", () => subtractPoint("left"));
+    document.getElementById("rightMinusBtn").addEventListener("click", () => subtractPoint("right"));
+
+    // Kilökés (+10 pont, a meccs véget ér, de a pontszám dönt!)
+    function awardRingOut(winnerSide) {
+      pushUndo();
+      pauseTimer();
+      clearTimeout(ringOutTimer);
+      const loserSide = winnerSide === "left" ? "right" : "left";
+      state[winnerSide].points += 10;
+      state[winnerSide].stats.ringout = (state[winnerSide].stats.ringout || 0) + 1;
+      state[winnerSide].mood = "happy";
+      state[winnerSide].moodUntil = Date.now() + 2600;
+      state[loserSide].mood = "out";
+      state[loserSide].moodUntil = Date.now() + 2600;
+
+      state.lastBanner = {
+        id: Date.now() + "_" + Math.random(),
+        text: pickRandom(EVENT_SLOGANS.ringout),
+        subtext: `${state[winnerSide].name} (+10 pont) • VÉGE A MECCSNEK!`,
+        side: winnerSide,
+        type: "ringout",
+        ts: Date.now()
+      };
+
+      SoundFX.play("ringout", state.soundEnabled);
+      broadcastState();
+
+      // Rövid drámai szünet után eredményhirdetés az összpontszám alapján
+      ringOutTimer = setTimeout(() => {
+        decideWinnerAuto("KILÖKÉS – VÉGE A MECCSNEK");
+        if (state.winner && state.winner.side !== "draw") {
+          SoundFX.play("win", state.soundEnabled);
+        } else {
+          SoundFX.play("buzzer", state.soundEnabled);
+        }
+      }, 1200);
+    }
+
+    document.getElementById("leftRingOutWinBtn").addEventListener("click", () => awardRingOut("left"));
+    document.getElementById("rightRingOutWinBtn").addEventListener("click", () => awardRingOut("right"));
+
+    // Mozgásképtelenség (10 mp rászámolás)
+    function startKoCount(targetSide) {
+      clearInterval(koInterval);
+      state.koCount = { side: targetSide, sec: 10, active: true };
+      broadcastState();
+      koInterval = setInterval(() => {
+        if (!state.koCount || !state.koCount.active) {
+          clearInterval(koInterval);
+          return;
+        }
+        state.koCount.sec -= 1;
+        if (state.koCount.sec <= 0) {
+          finishKo();
+        } else {
+          SoundFX.play("beep", state.soundEnabled);
+          broadcastState();
+        }
+      }, 1000);
+    }
+
+    function finishKo() {
+      clearInterval(koInterval);
+      if (!state.koCount) return;
+      pushUndo();
+      const loserSide = state.koCount.side;
+      const winnerSide = loserSide === "left" ? "right" : "left";
+      state.koCount = null;
+      pauseTimer();
+      state[loserSide].mood = "out";
+      state[loserSide].moodUntil = Date.now() + 3000;
+      state[winnerSide].mood = "happy";
+      state[winnerSide].moodUntil = Date.now() + 3000;
+      state.lastBanner = {
+        id: Date.now() + "_" + Math.random(),
+        text: pickRandom(EVENT_SLOGANS.ko),
+        subtext: `${state[loserSide].name} mozgásképtelen!`,
+        side: winnerSide,
+        type: "ko",
+        ts: Date.now()
+      };
+      state.winner = {
+        side: winnerSide,
+        reason: `K.O. – ${state[loserSide].name} mozgásképtelen lett!`
+      };
+      SoundFX.play("ko", state.soundEnabled);
+      setTimeout(() => SoundFX.play("win", state.soundEnabled), 650);
+      broadcastState();
+    }
+
+    document.getElementById("leftKoBtn").addEventListener("click", () => startKoCount("left"));
+    document.getElementById("rightKoBtn").addEventListener("click", () => startKoCount("right"));
+    document.getElementById("koCancelBtn").addEventListener("click", () => {
+      clearInterval(koInterval);
+      state.koCount = null;
+      broadcastState();
+    });
+    document.getElementById("koFinishNowBtn").addEventListener("click", finishKo);
+
+    // Eredményhirdetés a szabályok alapján
+    function decideWinnerAuto(prefix = "VÉGEREDMÉNY") {
+      if (state.left.points > state.right.points) {
+        state.winner = { side: "left", reason: `${prefix} • Pontozással (${state.left.points}–${state.right.points})` };
+      } else if (state.right.points > state.left.points) {
+        state.winner = { side: "right", reason: `${prefix} • Pontozással (${state.left.points}–${state.right.points})` };
+      } else {
+        state.winner = { side: "draw", reason: `${prefix} • Pontegyenlőség (${state.left.points}–${state.right.points})` };
+      }
+      broadcastState();
+    }
+
+    document.getElementById("decideWinnerBtn").addEventListener("click", () => {
+      pauseTimer();
+      decideWinnerAuto("BÍRÓI DÖNTÉS");
+      if (state.winner && state.winner.side !== "draw") {
+        SoundFX.play("win", state.soundEnabled);
+      } else {
+        SoundFX.play("buzzer", state.soundEnabled);
+      }
+    });
+    document.getElementById("clearWinnerBtn").addEventListener("click", () => {
+      state.winner = null;
+      broadcastState();
+    });
+
+
+    // Vicces halálsugár figyelmeztetés
+    document.getElementById("laserWarnBtn").addEventListener("click", () => {
+      state.lastBanner = {
+        id: Date.now() + "_" + Math.random(),
+        text: pickRandom(EVENT_SLOGANS.laser),
+        subtext: "A szabályzat szerint csak tisztességes robotharc!",
+        side: "center",
+        type: "laser",
+        ts: Date.now()
+      };
+      SoundFX.play("laser", state.soundEnabled);
+      broadcastState();
+    });
+
+    // Nevek, cím, avatár
+    document.getElementById("matchTitleInput").addEventListener("input", (e) => {
+      state.matchTitle = e.target.value;
+      broadcastState();
+    });
+    document.getElementById("leftNameInput").addEventListener("input", (e) => {
+      state.left.name = e.target.value;
+      broadcastState();
+    });
+    document.getElementById("rightNameInput").addEventListener("input", (e) => {
+      state.right.name = e.target.value;
+      broadcastState();
+    });
+    document.getElementById("leftAvatarSelect").addEventListener("change", (e) => {
+      state.left.avatar = e.target.value;
+      broadcastState();
+    });
+    document.getElementById("rightAvatarSelect").addEventListener("change", (e) => {
+      state.right.avatar = e.target.value;
+      broadcastState();
+    });
+
+    document.getElementById("leftRandomBtn").addEventListener("click", () => {
+      const n = pickRandom(FUNNY_NAMES.filter(x => x !== state.right.name));
+      state.left.name = n;
+      document.getElementById("leftNameInput").value = n;
+      broadcastState();
+    });
+    document.getElementById("rightRandomBtn").addEventListener("click", () => {
+      const n = pickRandom(FUNNY_NAMES.filter(x => x !== state.left.name));
+      state.right.name = n;
+      document.getElementById("rightNameInput").value = n;
+      broadcastState();
+    });
+
+    // Hang, Undo, Új mérkőzés
+    document.getElementById("soundToggleBtn").addEventListener("click", () => {
+      state.soundEnabled = !state.soundEnabled;
+      broadcastState();
+    });
+
+    document.getElementById("undoBtn").addEventListener("click", () => {
+      if (!historyStack.length) return;
+      clearTimeout(ringOutTimer);
+      state = historyStack.pop();
+      syncInputsFromState();
+      broadcastState();
+    });
+
+    document.getElementById("newMatchBtn").addEventListener("click", () => {
+      clearInterval(koInterval);
+      clearTimeout(ringOutTimer);
+      startTimers.forEach(t => clearTimeout(t));
+      const keepLeft = { name: state.left.name, avatar: state.left.avatar };
+      const keepRight = { name: state.right.name, avatar: state.right.avatar };
+      const keepTitle = state.matchTitle;
+      const keepSound = state.soundEnabled;
+      state = createDefaultState();
+      state.left.name = keepLeft.name;
+      state.left.avatar = keepLeft.avatar;
+      state.right.name = keepRight.name;
+      state.right.avatar = keepRight.avatar;
+      state.matchTitle = keepTitle;
+      state.soundEnabled = keepSound;
+      historyStack = [];
+      syncInputsFromState();
+      broadcastState();
+    });
+
+    // Gyorsbillentyűk (ha épp nem mezőbe gépel a bíró)
+    window.addEventListener("keydown", (e) => {
+      const tag = (e.target && e.target.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      if (e.code === "Space") { e.preventDefault(); toggleTimer(); }
+      else if (e.key === "r" || e.key === "R") triggerStartCountdown();
+      else if (e.key === "q" || e.key === "Q" || e.key === "a" || e.key === "A") awardPoints("left", "hit");
+      else if (e.key === "w" || e.key === "W") awardPoints("left", "damage");
+      else if (e.key === "e" || e.key === "E") awardPoints("left", "lift");
+      else if (e.key === "i" || e.key === "I" || e.key === "l" || e.key === "L") awardPoints("right", "hit");
+      else if (e.key === "o" || e.key === "O") awardPoints("right", "damage");
+      else if (e.key === "p" || e.key === "P") awardPoints("right", "lift");
+    });
+
+    function syncInputsFromState() {
+      document.getElementById("matchTitleInput").value = state.matchTitle;
+      document.getElementById("leftNameInput").value = state.left.name;
+      document.getElementById("rightNameInput").value = state.right.name;
+      document.getElementById("leftAvatarSelect").value = state.left.avatar;
+      document.getElementById("rightAvatarSelect").value = state.right.avatar;
+    }
+
+    // Indítás: meglévő állapot visszatöltése (ha volt)
+    fillAvatarSelect(document.getElementById("leftAvatarSelect"), state.left.avatar);
+    fillAvatarSelect(document.getElementById("rightAvatarSelect"), state.right.avatar);
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        state = Object.assign(createDefaultState(), parsed);
+        state.timerRunning = false;
+        state.timerAnchor = null;
+        state.startCountdown = null;
+        state.koCount = null;
+      }
+    } catch (e) {}
+    syncInputsFromState();
+    broadcastState();
+
+    // Kivetítő állapotának figyelése (bezárták-e)
+    setInterval(() => {
+      const conn = document.getElementById("connPill");
+      const open = projectorWin && !projectorWin.closed;
+      conn.textContent = open ? "Kivetítő: KAPCSOLÓDVA ✓" : "Kivetítő: nincs nyitva";
+      conn.classList.toggle("ok", !!open);
+    }, 1000);
+  </script>
+</body>
+</html>
