@@ -27,7 +27,17 @@ A lehető legjobb robotok vívjanak meg egymással egy arénában.
 
 ## A pálya felépítése
 
-- **A pálya mérete:** *(nincs megadva a dokumentumban)*
+- **A pálya mérete:** 100 cm × 100 cm-es négyzet alakú aréna (3–5 cm magas dobogó, alatta puha felülettel a robotok védelmére).
+- **Falak és nyitott oldalak:** Két szemközti oldalon 8–10 cm magas fal határolja, a másik két szemközti oldal nyitott (**kieső zóna**).
+- **Indítóterületek:** A két fallal határolt oldal mentén, egymással szemben helyezkednek el (így rajtnál a két nyitott oldal balra és jobbra esik).
+
+```text
+      =========== FAL ===========
+     :           [R1]            :
+  NYITOTT                     NYITOTT
+     :           [R2]            :
+      =========== FAL ===========
+```
 
 ---
 
@@ -36,15 +46,17 @@ A lehető legjobb robotok vívjanak meg egymással egy arénában.
 1. **Robot és rádiós kommunikáció ellenőrzés:**  
    A két versenyző bemutatja a robotját a bíróknak, valamint azt, hogy miként tudja irányítani.
 
-2. **A robotok elhelyezése** az indítóterületen.
+2. **A robotok elhelyezése** az indítóterületen (a két szemközti fal mellett).
 
 3. **Rajtjelre** a robotok elindulhatnak az indítóterületről.
 
-4. **A mérkőzés hossza:**  
-   - 3 percig tart, vagy addig, amíg valamelyik robot mozgásképtelenné válik.
+4. **A mérkőzés hossza és menetek:**  
+   - Legfeljebb **3 percig** tart, vagy addig, amíg valamelyik robot **2 menetet megnyer**, illetve tartósan mozgásképtelenné válik.
+   - **Kiesés (kilökés):** Ha egy robot leesik a pálya nyitott oldalán (akár kilökték, akár magától hajtott le), az ellenfél nyeri az adott menetet, majd a robotok visszaállnak az indítóterületre.
 
 5. **Pontozás:**  
-   - Ha a 3 perc végén mindkét robot mozgásképes vagy mozgásképtelen, a bírók pontozása dönt.
+   - Ha a 3 perc végén egyik robot sem szerzett 2 nyert menetet és a menetek állása döntetlen (pl. 0–0 vagy 1–1), a bírók pontozása dönt.
+   - Ha a 3 perc végén valamelyik robot 1–0-ra vezet menetben, az a robot nyer.
 
 ---
 

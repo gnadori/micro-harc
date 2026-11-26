@@ -1,0 +1,43 @@
+input.onButtonPressed(Button.A, function () {
+    radio.sendValue("hit", 1)
+    music.play(music.builtinPlayableSoundEffect(soundExpression.spring), music.PlaybackMode.InBackground)
+})
+input.onButtonPressed(Button.B, function () {
+    radio.sendValue("stopgo", 1)
+    music.play(music.builtinPlayableSoundEffect(soundExpression.happy), music.PlaybackMode.InBackground)
+})
+let deadzoneTilt = 0
+let deadzoneSpeed = 0
+let tiltLimit = 0
+let speedLimit = 0
+let radioGroup = 0
+let dotY = 0
+let dotX = 0
+let packed = 0
+let tlt = 0
+let spd = 0
+radioGroup = 10
+speedLimit = 45
+tiltLimit = 25
+deadzoneSpeed = 10
+deadzoneTilt = 8
+radio.setGroup(radioGroup)
+basic.forever(function () {
+    spd = Math.round(Math.map(input.acceleration(Dimension.Y), -1023, 1023, 0 - speedLimit, speedLimit))
+    tlt = Math.round(Math.map(input.acceleration(Dimension.X), -1023, 1023, 0 - tiltLimit, tiltLimit))
+    spd = Math.constrain(spd, -50, 50)
+    tlt = Math.constrain(tlt, -50, 50)
+    if (Math.abs(spd) < deadzoneSpeed) {
+        spd = 0
+    }
+    if (Math.abs(tlt) < deadzoneTilt) {
+        tlt = 0
+    }
+    packed = (spd + 50) * 1000 + (tlt + 50)
+    radio.sendValue("drv", packed)
+    dotX = Math.constrain(Math.round(Math.map(tlt, 0 - tiltLimit, tiltLimit, 0, 4)), 0, 4)
+    dotY = Math.constrain(Math.round(Math.map(spd, 0 - speedLimit, speedLimit, 0, 4)), 0, 4)
+    basic.clearScreen()
+    led.plot(dotX, dotY)
+    basic.pause(60)
+})

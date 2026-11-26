@@ -1,0 +1,24 @@
+let dotY = 0
+let seb = 0
+let uzenet = 0
+let csoport = 0
+csoport = 3
+radio.setGroup(csoport)
+basic.forever(function () {
+    seb = Math.round(Math.map(input.acceleration(Dimension.Y), -1023, 1023, 0, 99))
+    seb = Math.constrain(seb, 0, 99)
+    uzenet = seb
+    basic.clearScreen()
+    if (input.buttonIsPressed(Button.A)) {
+        uzenet = uzenet + 1000
+        led.plot(0, 0)
+    }
+    if (input.buttonIsPressed(Button.B)) {
+        uzenet = uzenet + 10000
+        led.plot(4, 0)
+    }
+    dotY = Math.constrain(Math.round(Math.map(seb, 0, 99, 0, 4)), 0, 4)
+    led.plot(2, dotY)
+    radio.sendValue("drv", uzenet)
+    basic.pause(60)
+})

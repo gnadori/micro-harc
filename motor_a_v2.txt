@@ -1,0 +1,129 @@
+function motorokBeallitasa () {
+    if (curM1 < 0) {
+        DriveBit.move(dbMotor.M1, dbDirection.Reverse, Math.abs(curM1))
+    } else if (curM1 > 0) {
+        DriveBit.move(dbMotor.M1, dbDirection.Forward, curM1)
+    } else {
+        DriveBit.move(dbMotor.M1, dbDirection.Forward, 0)
+    }
+    if (curM2 < 0) {
+        DriveBit.move(dbMotor.M2, dbDirection.Reverse, Math.abs(curM2))
+    } else if (curM2 > 0) {
+        DriveBit.move(dbMotor.M2, dbDirection.Forward, curM2)
+    } else {
+        DriveBit.move(dbMotor.M2, dbDirection.Forward, 0)
+    }
+}
+function allapotKijelzes () {
+    if (go) {
+        basic.showIcon(IconNames.Yes)
+    } else {
+        basic.showIcon(IconNames.No)
+    }
+}
+input.onButtonPressed(Button.A, function () {
+    go = !(go)
+    stateDirty = true
+})
+radio.onReceivedValue(function (name, value) {
+    if (name == "drv") {
+        targetSpeed = Math.trunc(value / 1000) - 50
+        targetTilt = value % 1000 - 50
+        lastSignalTime = input.runningTime()
+    } else if (name == "hit") {
+        hitRequested = true
+    } else if (name == "stopgo") {
+        if (input.runningTime() - lastStopGoTime > 300) {
+            lastStopGoTime = input.runningTime()
+            go = !(go)
+            stateDirty = true
+        }
+    }
+})
+let signalTimeoutMs = 0
+let minMotorPower = 0
+let rampStep = 0
+let maxSpeed = 0
+let radioGroup = 0
+let desM2 = 0
+let desM1 = 0
+let lastStopGoTime = 0
+let lastSignalTime = 0
+let hitRequested = false
+let curM2 = 0
+let curM1 = 0
+let targetTilt = 0
+let targetSpeed = 0
+let stateDirty = false
+let go = false
+radioGroup = 10
+maxSpeed = 60
+rampStep = 8
+minMotorPower = 15
+signalTimeoutMs = 1000
+radio.setGroup(radioGroup)
+DriveBit.stop(dbStopMode.Coast)
+pins.digitalWritePin(DigitalPin.P1, 0)
+basic.showString("R")
+basic.pause(400)
+go = false
+stateDirty = true
+basic.forever(function () {
+    if (stateDirty) {
+        stateDirty = false
+        allapotKijelzes()
+    }
+    if (hitRequested) {
+        hitRequested = false
+        DriveBit.stop(dbStopMode.Coast)
+        curM1 = 0
+        curM2 = 0
+        basic.showIcon(IconNames.Diamond)
+        basic.pause(150)
+        pins.servoWritePin(AnalogPin.P1, 10)
+        basic.pause(600)
+        pins.servoWritePin(AnalogPin.P1, 170)
+        basic.pause(600)
+        pins.digitalWritePin(DigitalPin.P1, 0)
+        stateDirty = true
+    } else if (go) {
+        if (input.runningTime() - lastSignalTime > signalTimeoutMs) {
+            desM1 = 0
+            desM2 = 0
+        } else {
+            desM1 = Math.constrain(targetSpeed + targetTilt, 0 - maxSpeed, maxSpeed)
+            desM2 = Math.constrain(targetSpeed - targetTilt, 0 - maxSpeed, maxSpeed)
+            if (Math.abs(desM1) < minMotorPower) {
+                desM1 = 0
+            }
+            if (Math.abs(desM2) < minMotorPower) {
+                desM2 = 0
+            }
+        }
+        if (desM1 > curM1 + rampStep) {
+            curM1 = curM1 + rampStep
+        } else if (desM1 < curM1 - rampStep) {
+            curM1 = curM1 - rampStep
+        } else {
+            curM1 = desM1
+        }
+        if (desM2 > curM2 + rampStep) {
+            curM2 = curM2 + rampStep
+        } else if (desM2 < curM2 - rampStep) {
+            curM2 = curM2 - rampStep
+        } else {
+            curM2 = desM2
+        }
+        if (curM1 == 0 && curM2 == 0) {
+            DriveBit.stop(dbStopMode.Coast)
+        } else {
+            motorokBeallitasa()
+        }
+        basic.pause(30)
+    } else {
+        curM1 = 0
+        curM2 = 0
+        DriveBit.stop(dbStopMode.Coast)
+        basic.pause(50)
+    }
+})

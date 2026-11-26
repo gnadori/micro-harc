@@ -1,0 +1,130 @@
+function motorokBeallitasa () {
+    if (curM1 < 0) {
+        DriveBit.move(dbMotor.M1, dbDirection.Reverse, Math.abs(curM1))
+    } else if (curM1 > 0) {
+        DriveBit.move(dbMotor.M1, dbDirection.Forward, curM1)
+    } else {
+        DriveBit.move(dbMotor.M1, dbDirection.Forward, 0)
+    }
+    if (curM2 < 0) {
+        DriveBit.move(dbMotor.M2, dbDirection.Reverse, Math.abs(curM2))
+    } else if (curM2 > 0) {
+        DriveBit.move(dbMotor.M2, dbDirection.Forward, curM2)
+    } else {
+        DriveBit.move(dbMotor.M2, dbDirection.Forward, 0)
+    }
+}
+input.onButtonPressed(Button.A, function () {
+    go = !(go)
+    stateDirty = true
+})
+radio.onReceivedValue(function (name, value) {
+    if (name == "drv") {
+        speed = value % 100
+        if (Math.trunc(value / 1000) % 10 == 1) {
+            speed1 = true
+        } else {
+            speed1 = false
+        }
+        if (Math.trunc(value / 10000) == 1) {
+            speed2 = true
+        } else {
+            speed2 = false
+        }
+        lastSignalTime = input.runningTime()
+    }
+})
+let rawPower = 0
+let desM2 = 0
+let desM1 = 0
+let curM2 = 0
+let curM1 = 0
+let lastSignalTime = 0
+let speed = 0
+let speed2 = false
+let speed1 = false
+let stateDirty = false
+let go = false
+let signalTimeoutMs = 0
+let minMotorPower = 0
+let rampStep = 0
+let maxSpeed = 0
+let csoport = 0
+csoport = 3
+maxSpeed = 60
+rampStep = 8
+minMotorPower = 15
+signalTimeoutMs = 1000
+radio.setGroup(csoport)
+DriveBit.stop(dbStopMode.Coast)
+basic.showString("R")
+go = true
+stateDirty = true
+basic.forever(function () {
+    if (go) {
+        if (stateDirty) {
+            stateDirty = false
+            basic.clearScreen()
+            led.plot(2, 2)
+        }
+        if (speed1) {
+            led.plot(0, 0)
+        } else {
+            led.unplot(0, 0)
+        }
+        if (speed2) {
+            led.plot(4, 0)
+        } else {
+            led.unplot(4, 0)
+        }
+        if (input.runningTime() - lastSignalTime > signalTimeoutMs) {
+            desM1 = 0
+            desM2 = 0
+        } else {
+            rawPower = (speed - 50) * 2
+            rawPower = Math.constrain(rawPower, 0 - maxSpeed, maxSpeed)
+            if (Math.abs(rawPower) < minMotorPower) {
+                rawPower = 0
+            }
+            if (speed1) {
+                desM1 = rawPower
+            } else {
+                desM1 = 0
+            }
+            if (speed2) {
+                desM2 = rawPower
+            } else {
+                desM2 = 0
+            }
+        }
+        if (desM1 > curM1 + rampStep) {
+            curM1 = curM1 + rampStep
+        } else if (desM1 < curM1 - rampStep) {
+            curM1 = curM1 - rampStep
+        } else {
+            curM1 = desM1
+        }
+        if (desM2 > curM2 + rampStep) {
+            curM2 = curM2 + rampStep
+        } else if (desM2 < curM2 - rampStep) {
+            curM2 = curM2 - rampStep
+        } else {
+            curM2 = desM2
+        }
+        if (curM1 == 0 && curM2 == 0) {
+            DriveBit.stop(dbStopMode.Coast)
+        } else {
+            motorokBeallitasa()
+        }
+        basic.pause(30)
+    } else {
+        if (stateDirty) {
+            stateDirty = false
+            basic.showIcon(IconNames.No)
+        }
+        curM1 = 0
+        curM2 = 0
+        DriveBit.stop(dbStopMode.Coast)
+        basic.pause(50)
+    }
+})
